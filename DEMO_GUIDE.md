@@ -136,6 +136,60 @@ python semantic_mcp_server.py
 - **API-First**: RESTful APIs enable seamless AI agent integration
 - **Open Source**: Built on proven open-source technologies
 
+## 🤖 Agentic Platform Integration
+
+### Simple Natural Language Interface
+
+The semantic layer MCP enables agentic AI platforms to provide users with **conversational business intelligence**. Instead of writing SQL or building dashboards, users simply ask questions in plain English:
+
+**User**: *"What are our top performing sales channels this quarter?"*
+
+**AI Agent Process**:
+1. **Receives** natural language query from user
+2. **Connects** to semantic layer via MCP protocol 
+3. **Converts** English to structured Cube.js query automatically
+4. **Executes** query against DuckLake architecture
+5. **Returns** formatted insights with business context
+
+**Result**: *"Your top sales channels are: Online ($89K revenue, 234 orders), Retail ($67K revenue, 189 orders), B2B ($45K revenue, 67 orders). Online has the highest volume but B2B has 2.1x higher average order value."*
+
+### Value Proposition
+
+**For Business Users:**
+- Ask questions naturally without learning SQL or BI tools
+- Get instant answers with business context, not just raw numbers
+- Explore data conversationally: "What about by region?" → "Show me the seasonal trends"
+
+**For Agentic Platforms:**
+- **Plug-and-play data intelligence** - no custom database integrations needed
+- **Semantic understanding** - queries use business terms (revenue, customers) not technical fields (total_amount, user_id) 
+- **Governed data access** - semantic layer ensures consistent business logic and calculations
+- **Scalable architecture** - handles concurrent AI agent requests efficiently
+
+### Integration Example
+
+```python
+# AI Agent connects to semantic layer MCP
+from mcp import Client
+
+mcp_client = Client("semantic-layer-mcp")
+
+# User asks natural language question
+user_query = "Which customer segments have the highest lifetime value?"
+
+# AI agent uses MCP to get insights
+response = await mcp_client.call_tool(
+    "query_semantic_layer",
+    {"description": user_query}
+)
+
+# Response includes both data and business insights
+print(response.insights)
+# → "💎 Enterprise customers average $47K lifetime value (3.2x higher than Individual)"
+```
+
+This turns any agentic platform into a **conversational business intelligence system** where users can explore data through natural dialogue rather than technical interfaces.
+
 ## 🧠 AI Agent Use Cases
 
 ### 1. Executive Dashboard Agent

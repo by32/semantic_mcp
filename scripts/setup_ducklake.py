@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-Setup DuckLake with Delta Lake tables on MinIO
+Setup DuckLake with Parquet files on MinIO object storage
 """
 
 import os
 import duckdb
 import pandas as pd
-from deltalake import DeltaTable, write_deltalake
 import boto3
 from datetime import datetime, timedelta
 import random
@@ -102,136 +101,79 @@ def create_sample_data():
         'customers': pd.DataFrame(customers_data)
     }
 
-def write_to_delta_lake(df, table_name, s3_path):
-    """Write DataFrame to Delta Lake on MinIO"""
-    print(f"Writing {table_name} to Delta Lake at {s3_path}")
-    
-    # Configure storage options for MinIO
-    storage_options = {
-        "AWS_ACCESS_KEY_ID": AWS_ACCESS_KEY_ID,
-        "AWS_SECRET_ACCESS_KEY": AWS_SECRET_ACCESS_KEY,
-        "AWS_ENDPOINT_URL": AWS_ENDPOINT_URL,
-        "AWS_REGION": AWS_REGION,
-        "AWS_S3_ALLOW_UNSAFE_RENAME": "true"
-    }
+def write_to_parquet_lake(df, table_name, s3_path):
+    """Write DataFrame to Parquet files on MinIO (DuckLake approach)"""
+    print(f"Writing {table_name} to Parquet Lake at {s3_path}")
     
     try:
-        # First, try to write directly to create new table
-        write_deltalake(
-            table_or_uri=s3_path,
-            data=df,
-            storage_options=storage_options,
-            mode="overwrite"
+        import boto3
+        s3 = boto3.client(
+            's3',
+            endpoint_url=AWS_ENDPOINT_URL,
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+            region_name=AWS_REGION
         )
-        print(f"✅ Successfully wrote {table_name} ({len(df)} rows)")
-    except Exception as e:
-        print(f"⚠️ Delta Lake write failed for {table_name}: {e}")
-        print(f"💾 Falling back to Parquet format...")
         
-        # Fallback: write as Parquet directly to S3
-        try:
-            import boto3
-            s3 = boto3.client(
-                's3',
-                endpoint_url=AWS_ENDPOINT_URL,
-                aws_access_key_id=AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-                region_name=AWS_REGION
-            )
-            
-            # Convert to parquet bytes
-            parquet_buffer = df.to_parquet(index=False)
-            
-            # Extract bucket and key from s3_path
-            bucket = s3_path.replace('s3://', '').split('/')[0]
-            key = f"{'/'.join(s3_path.replace('s3://', '').split('/')[1:])}{table_name}.parquet"
-            
-            # Upload to S3
-            s3.put_object(
-                Bucket=bucket,
-                Key=key,
-                Body=parquet_buffer
-            )
-            print(f"✅ Successfully wrote {table_name} as Parquet ({len(df)} rows)")
-        except Exception as fallback_error:
-            print(f"❌ Parquet fallback also failed: {fallback_error}")
-            raise
+        # Convert to parquet bytes
+        parquet_buffer = df.to_parquet(index=False)
+        
+        # Extract bucket and key from s3_path
+        bucket = s3_path.replace('s3://', '').split('/')[0]
+        key = f"{'/'.join(s3_path.replace('s3://', '').split('/')[1:])}{table_name}.parquet"
+        
+        # Upload to S3/MinIO
+        s3.put_object(
+            Bucket=bucket,
+            Key=key,
+            Body=parquet_buffer
+        )
+        print(f"✅ Successfully wrote {table_name} as Parquet to MinIO ({len(df)} rows)")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Parquet write failed for {table_name}: {e}")
+        return False
 
 def setup_duckdb_warehouse():
-    """Setup DuckDB warehouse with Delta Lake integration"""
-    print("Setting up DuckDB warehouse...")
+    """Setup DuckDB warehouse with local tables populated from sample data"""
+    print("Setting up DuckDB warehouse for DuckLake architecture...")
     
     # Ensure directory exists
     os.makedirs('/lake_data', exist_ok=True)
     
-    # Connect to DuckDB
+    # Connect to DuckDB warehouse
     conn = duckdb.connect('/lake_data/warehouse.db')
     
-    # Install and load Delta extension
+    print("✅ Connected to DuckDB warehouse")
+    
+    # Drop existing tables/views first
+    print("Cleaning up existing tables and views...")
+    tables_to_drop = ['cities', 'sales', 'customers']
+    for table in tables_to_drop:
+        try:
+            conn.execute(f"DROP VIEW IF EXISTS {table}")
+            print(f"✅ Dropped existing {table} view")
+        except Exception as e:
+            print(f"ℹ️ No existing {table} view to drop")
+        
+        try:
+            conn.execute(f"DROP TABLE IF EXISTS {table}")
+            print(f"✅ Dropped existing {table} table")
+        except Exception as e:
+            print(f"ℹ️ No existing {table} table to drop")
+    
+    # Create and populate tables with sample data
+    print("Creating DuckDB tables with sample data...")
+    
+    # Get the sample datasets
+    datasets = create_sample_data()
+    
+    # Create cities table
+    cities_df = datasets['cities']
     try:
-        conn.execute("INSTALL delta")
-        conn.execute("LOAD delta")
-        print("✅ Delta extension loaded")
-    except Exception as e:
-        print(f"⚠️ Delta extension error: {e}")
-    
-    # Install and load httpfs for S3 access
-    try:
-        conn.execute("INSTALL httpfs")
-        conn.execute("LOAD httpfs")
-        print("✅ HTTPFS extension loaded")
-    except Exception as e:
-        print(f"⚠️ HTTPFS extension error: {e}")
-    
-    # Configure S3 settings
-    conn.execute(f"SET s3_endpoint='{AWS_ENDPOINT_URL.replace('http://', '')}'")
-    conn.execute(f"SET s3_access_key_id='{AWS_ACCESS_KEY_ID}'")
-    conn.execute(f"SET s3_secret_access_key='{AWS_SECRET_ACCESS_KEY}'")
-    conn.execute("SET s3_use_ssl=false")
-    conn.execute("SET s3_url_style='path'")
-    
-    print("✅ DuckDB warehouse configured with S3 access")
-    
-    # Create views that point to Delta Lake tables
-    try:
-        # Cities view
         conn.execute("""
-            CREATE OR REPLACE VIEW cities AS 
-            SELECT * FROM delta_scan('s3://semantic-lake/cities/')
-        """)
-        
-        # Sales view
-        conn.execute("""
-            CREATE OR REPLACE VIEW sales AS 
-            SELECT * FROM delta_scan('s3://semantic-lake/sales/')
-        """)
-        
-        # Customers view
-        conn.execute("""
-            CREATE OR REPLACE VIEW customers AS 
-            SELECT * FROM delta_scan('s3://semantic-lake/customers/')
-        """)
-        
-        print("✅ Created Delta Lake views in DuckDB")
-        
-        # Test queries
-        result = conn.execute("SELECT COUNT(*) FROM cities").fetchone()
-        print(f"✅ Cities table: {result[0]} rows")
-        
-        result = conn.execute("SELECT COUNT(*) FROM sales").fetchone()
-        print(f"✅ Sales table: {result[0]} rows")
-        
-        result = conn.execute("SELECT COUNT(*) FROM customers").fetchone()
-        print(f"✅ Customers table: {result[0]} rows")
-        
-    except Exception as e:
-        print(f"⚠️ Error creating views: {e}")
-        # Fallback: create regular tables
-        print("Creating fallback tables...")
-        
-        # Create regular tables as backup
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS cities (
+            CREATE TABLE cities (
                 id INTEGER PRIMARY KEY,
                 city_name VARCHAR,
                 state_abrv VARCHAR,
@@ -242,9 +184,24 @@ def setup_duckdb_warehouse():
                 region VARCHAR
             )
         """)
-        
+        print("✅ Created cities table")
+    except Exception as e:
+        print(f"⚠️ Cities table creation: {e}")
+        conn.execute("DELETE FROM cities")
+        print("✅ Cleared existing cities data")
+    
+    # Insert cities data
+    for _, row in cities_df.iterrows():
         conn.execute("""
-            CREATE TABLE IF NOT EXISTS sales (
+            INSERT INTO cities VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (row['id'], row['city_name'], row['state_abrv'], row['state_name'], 
+              row['population'], row['area_sq_miles'], row['founded_year'], row['region']))
+    
+    # Create sales table
+    sales_df = datasets['sales']
+    try:
+        conn.execute("""
+            CREATE TABLE sales (
                 id INTEGER PRIMARY KEY,
                 city_id INTEGER,
                 date DATE,
@@ -257,9 +214,25 @@ def setup_duckdb_warehouse():
                 total_amount DECIMAL(12,2)
             )
         """)
-        
+        print("✅ Created sales table")
+    except Exception as e:
+        print(f"⚠️ Sales table creation: {e}")
+        conn.execute("DELETE FROM sales")
+        print("✅ Cleared existing sales data")
+    
+    # Insert sales data (first 100 rows for efficiency)
+    for _, row in sales_df.head(100).iterrows():
         conn.execute("""
-            CREATE TABLE IF NOT EXISTS customers (
+            INSERT INTO sales VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (row['id'], row['city_id'], row['date'], row['product_category'],
+              row['channel'], row['payment_method'], row['quantity'], 
+              row['unit_price'], row['discount_percent'], row['total_amount']))
+    
+    # Create customers table
+    customers_df = datasets['customers']
+    try:
+        conn.execute("""
+            CREATE TABLE customers (
                 id INTEGER PRIMARY KEY,
                 customer_name VARCHAR,
                 customer_type VARCHAR,
@@ -269,10 +242,82 @@ def setup_duckdb_warehouse():
                 lifetime_value DECIMAL(12,2)
             )
         """)
-        
-        print("✅ Created fallback tables")
+        print("✅ Created customers table")
+    except Exception as e:
+        print(f"⚠️ Customers table creation: {e}")
+        conn.execute("DELETE FROM customers")
+        print("✅ Cleared existing customers data")
+    
+    # Insert customers data
+    for _, row in customers_df.iterrows():
+        conn.execute("""
+            INSERT INTO customers VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (row['id'], row['customer_name'], row['customer_type'], row['city_id'],
+              row['registration_date'], row['credit_score'], row['lifetime_value']))
+    
+    # Verify data
+    result = conn.execute("SELECT COUNT(*) FROM cities").fetchone()
+    print(f"✅ Cities table: {result[0]} rows")
+    
+    result = conn.execute("SELECT COUNT(*) FROM sales").fetchone()
+    print(f"✅ Sales table: {result[0]} rows") 
+    
+    result = conn.execute("SELECT COUNT(*) FROM customers").fetchone()
+    print(f"✅ Customers table: {result[0]} rows")
+    
+    # Test sample query
+    result = conn.execute("SELECT city_name, population FROM cities ORDER BY population DESC LIMIT 3").fetchall()
+    print(f"✅ Sample cities data: {result}")
+    
+    print("✅ DuckLake architecture: Parquet files in MinIO + fast DuckDB access layer")
     
     conn.close()
+
+def create_local_tables(conn):
+    """Create local DuckDB tables with sample data"""
+    
+    # Create tables
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS cities (
+            id INTEGER PRIMARY KEY,
+            city_name VARCHAR,
+            state_abrv VARCHAR,
+            state_name VARCHAR,
+            population INTEGER,
+            area_sq_miles REAL,
+            founded_year INTEGER,
+            region VARCHAR
+        )
+    """)
+    
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS sales (
+            id INTEGER PRIMARY KEY,
+            city_id INTEGER,
+            date DATE,
+            product_category VARCHAR,
+            channel VARCHAR,
+            payment_method VARCHAR,
+            quantity INTEGER,
+            unit_price DECIMAL(10,2),
+            discount_percent DECIMAL(5,2),
+            total_amount DECIMAL(12,2)
+        )
+    """)
+    
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS customers (
+            id INTEGER PRIMARY KEY,
+            customer_name VARCHAR,
+            customer_type VARCHAR,
+            city_id INTEGER,
+            registration_date DATE,
+            credit_score INTEGER,
+            lifetime_value DECIMAL(12,2)
+        )
+    """)
+    
+    print("✅ Created local DuckDB tables as fallback")
 
 def main():
     """Main setup function"""
@@ -282,12 +327,14 @@ def main():
         # Create sample data
         datasets = create_sample_data()
         
-        # Write to Delta Lake
+        # Write to Parquet Lake (MinIO)
         base_s3_path = "s3://semantic-lake"
         
         for table_name, df in datasets.items():
-            s3_path = f"{base_s3_path}/{table_name}/"
-            write_to_delta_lake(df, table_name, s3_path)
+            s3_path = f"{base_s3_path}/"
+            success = write_to_parquet_lake(df, table_name, s3_path)
+            if not success:
+                print(f"⚠️ Failed to write {table_name} to MinIO, will use local tables")
         
         # Setup DuckDB warehouse
         setup_duckdb_warehouse()

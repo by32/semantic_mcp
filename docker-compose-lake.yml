@@ -48,7 +48,7 @@ services:
     command: >
       sh -c "
         apt-get update && apt-get install -y gcc g++ &&
-        pip install duckdb deltalake boto3 pandas pyarrow &&
+        pip install duckdb boto3 pandas pyarrow &&
         python /scripts/setup_ducklake.py
       "
 

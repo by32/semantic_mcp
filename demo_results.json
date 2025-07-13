@@ -1,13 +1,13 @@
 {
   "total_tests": 11,
-  "successful_tests": 10,
-  "success_rate": 90.9090909090909,
-  "total_execution_time": 0.2566258907318115,
-  "average_response_time_ms": 18.93899440765381,
+  "successful_tests": 11,
+  "success_rate": 100.0,
+  "total_execution_time": 0.16053414344787598,
+  "average_response_time_ms": 14.575156298550693,
   "category_breakdown": {
     "Geographic Analysis": {
       "total": 2,
-      "success": 1
+      "success": 2
     },
     "Customer Analytics": {
       "total": 2,
@@ -39,9 +39,9 @@
       "name": "basic_population_ranking",
       "category": "Geographic Analysis",
       "natural_language": "What are the top 5 most populous cities?",
-      "success": false,
-      "execution_time_ms": 67.02899932861328,
-      "insights": null,
+      "success": true,
+      "execution_time_ms": 18.513917922973633,
+      "insights": "\ud83c\udfd9\ufe0f New York is the most populous city with 8,336,817 residents | \ud83d\udcc8 Analyzed 5 segments/categories",
       "business_value": "Urban planning, market sizing, resource allocation",
       "difficulty": "basic"
     },
@@ -50,7 +50,7 @@
       "category": "Geographic Analysis",
       "natural_language": "How many cities are in each region?",
       "success": true,
-      "execution_time_ms": 14.245033264160156,
+      "execution_time_ms": 14.21809196472168,
       "insights": "\ud83d\udcca Total cities analyzed: 10 | \ud83d\udcc8 Analyzed 4 segments/categories",
       "business_value": "Market expansion strategy, regional coverage analysis",
       "difficulty": "basic"
@@ -60,8 +60,8 @@
       "category": "Customer Analytics",
       "natural_language": "Show customer distribution by type and credit score tier",
       "success": true,
-      "execution_time_ms": 22.9949951171875,
-      "insights": "\ud83d\udc65 Total customers: 100 | \ud83d\udc8e Average customer lifetime value: $22,410.10 | \ud83d\udcc8 Analyzed 11 segments/categories",
+      "execution_time_ms": 17.781972885131836,
+      "insights": "\ud83d\udc65 Total customers: 200 | \ud83d\udc8e Average customer lifetime value: $24,638.17 | \ud83d\udcc8 Analyzed 12 segments/categories",
       "business_value": "Target marketing, risk assessment, customer strategy",
       "difficulty": "intermediate"
     },
@@ -70,8 +70,8 @@
       "category": "Customer Analytics",
       "natural_language": "Which customer types have the highest lifetime value?",
       "success": true,
-      "execution_time_ms": 10.954856872558594,
-      "insights": "\ud83d\udc65 Total customers: 100 | \ud83d\udc8e Average customer lifetime value: $24,814.37 | \ud83d\udcc8 Analyzed 3 segments/categories",
+      "execution_time_ms": 14.188766479492188,
+      "insights": "\ud83d\udc65 Total customers: 200 | \ud83d\udc8e Average customer lifetime value: $24,265.06 | \ud83d\udcc8 Analyzed 3 segments/categories",
       "business_value": "Customer acquisition cost optimization, retention strategy",
       "difficulty": "intermediate"
     },
@@ -80,8 +80,8 @@
       "category": "Sales Analytics",
       "natural_language": "What product categories generate the most revenue?",
       "success": true,
-      "execution_time_ms": 16.666173934936523,
-      "insights": "\ud83d\udcb0 Total revenue: $1,346,750.89 | \ud83e\udd47 Top performer: Books with $309,401.90 | \ud83d\udcc8 Analyzed 5 segments/categories",
+      "execution_time_ms": 16.630172729492188,
+      "insights": "\ud83d\udcb0 Total revenue: $253,363.15 | \ud83e\udd47 Top performer: Electronics with $70757.51 | \ud83d\udcc8 Analyzed 5 segments/categories",
       "business_value": "Inventory optimization, product strategy, pricing decisions",
       "difficulty": "basic"
     },
@@ -90,7 +90,7 @@
       "category": "Sales Analytics",
       "natural_language": "Compare average order value across different sales channels",
       "success": true,
-      "execution_time_ms": 15.477895736694336,
+      "execution_time_ms": 13.30113410949707,
       "insights": "\ud83d\udcc8 Analyzed 4 segments/categories",
       "business_value": "Channel investment decisions, sales strategy optimization",
       "difficulty": "intermediate"
@@ -100,8 +100,8 @@
       "category": "Sales Analytics",
       "natural_language": "How do discount tiers affect total sales volume?",
       "success": true,
-      "execution_time_ms": 40.96484184265137,
-      "insights": "\ud83d\udcb0 Total revenue: $1,346,750.89 | \ud83d\udcc8 Analyzed 3 segments/categories",
+      "execution_time_ms": 13.827800750732422,
+      "insights": "\ud83d\udcb0 Total revenue: $253,363.15 | \ud83d\udcc8 Analyzed 3 segments/categories",
       "business_value": "Pricing strategy, promotion effectiveness, margin optimization",
       "difficulty": "advanced"
     },
@@ -110,7 +110,7 @@
       "category": "Financial Analytics",
       "natural_language": "What payment methods are most popular and generate highest revenue?",
       "success": true,
-      "execution_time_ms": 30.115127563476562,
+      "execution_time_ms": 14.250993728637695,
       "insights": "\ud83d\udcc8 Analyzed 4 segments/categories",
       "business_value": "Payment processing optimization, customer experience improvement",
       "difficulty": "intermediate"
@@ -120,7 +120,7 @@
       "category": "Risk Analytics",
       "natural_language": "Show average customer lifetime value by credit score tier",
       "success": true,
-      "execution_time_ms": 13.420820236206055,
+      "execution_time_ms": 13.156890869140625,
       "insights": "\ud83d\udcc8 Analyzed 4 segments/categories",
       "business_value": "Credit policy optimization, risk-based pricing, customer acquisition",
       "difficulty": "advanced"
@@ -130,7 +130,7 @@
       "category": "Product Analytics",
       "natural_language": "Which product categories have the highest quantity sold?",
       "success": true,
-      "execution_time_ms": 12.563228607177734,
+      "execution_time_ms": 12.017965316772461,
       "insights": "\ud83d\udcc8 Analyzed 5 segments/categories",
       "business_value": "Inventory planning, supply chain optimization, demand forecasting",
       "difficulty": "basic"
@@ -140,7 +140,7 @@
       "category": "Executive Dashboard",
       "natural_language": "Give me a complete sales overview with revenue, orders, and average values",
       "success": true,
-      "execution_time_ms": 11.986970901489258,
+      "execution_time_ms": 12.43901252746582,
       "insights": "\u2705 Successfully retrieved 1 data points",
       "business_value": "Strategic decision making, board reporting, performance monitoring",
       "difficulty": "basic"
