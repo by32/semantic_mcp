@@ -1,0 +1,8 @@
+FROM cubejs/cube:latest
+
+# Copy configuration and schema files
+COPY cube.js /cube/conf/cube.js
+COPY schema/ /cube/conf/schema/
+
+# Set working directory
+WORKDIR /cube/conf

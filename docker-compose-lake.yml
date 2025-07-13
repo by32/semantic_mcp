@@ -1,0 +1,103 @@
+services:
+  # MinIO Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # Console
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+      MINIO_CONSOLE_ADDRESS: ":9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # MinIO Client Setup (create buckets)
+  minio-setup:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 admin password123;
+      /usr/bin/mc mb myminio/semantic-lake || true;
+      /usr/bin/mc mb myminio/semantic-warehouse || true;
+      echo 'MinIO buckets created successfully';
+      "
+
+  # DuckLake + Data Setup
+  ducklake-setup:
+    image: python:3.11-slim
+    depends_on:
+      - minio-setup
+    volumes:
+      - ./scripts:/scripts
+      - ./lake_data:/lake_data
+    environment:
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password123
+      - AWS_ENDPOINT_URL=http://minio:9000
+      - AWS_REGION=us-east-1
+    command: >
+      sh -c "
+        apt-get update && apt-get install -y gcc g++ &&
+        pip install duckdb deltalake boto3 pandas pyarrow &&
+        python /scripts/setup_ducklake.py
+      "
+
+  # Cube.dev with DuckLake
+  cube:
+    build:
+      context: .
+      dockerfile: Dockerfile.cube
+    ports:
+      - "4000:4000"   # Cube.dev UI
+      - "15432:15432" # Postgres-compatible endpoint
+    environment:
+      - CUBEJS_DEV_MODE=true
+      - CUBEJS_DB_TYPE=duckdb
+      - CUBEJS_DB_DUCKDB_DATABASE_PATH=./lake_data/warehouse.db
+      - CUBEJS_WEB_SOCKETS=true
+      - CUBEJS_API_SECRET=your-secret-key-here
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password123
+      - AWS_ENDPOINT_URL=http://minio:9000
+      - AWS_REGION=us-east-1
+    volumes:
+      - .:/cube/conf
+    depends_on:
+      - ducklake-setup
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/cubejs-api/v1/meta"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Python MCP Server
+  mcp-server:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - CUBE_API_URL=http://cube:4000
+      - CUBE_API_SECRET=your-secret-key-here
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password123
+      - AWS_ENDPOINT_URL=http://minio:9000
+      - AWS_REGION=us-east-1
+    depends_on:
+      cube:
+        condition: service_healthy
+    volumes:
+      - ./lake_data:/lake_data
+
+volumes:
+  minio_data:
