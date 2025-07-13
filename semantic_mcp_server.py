@@ -87,63 +87,71 @@ class NaturalLanguageProcessor:
             "filters": []
         }
         
-        # Revenue and sales measures
-        if any(word in desc_lower for word in ["revenue", "sales", "income"]):
-            query["measures"].append("Sales.total_revenue")
+        # Cities measures
+        if any(word in desc_lower for word in ["population", "people", "residents"]):
+            query["measures"].append("cities.total_population")
         
-        if "transaction" in desc_lower:
-            query["measures"].append("Sales.total_transactions")
+        if any(word in desc_lower for word in ["count", "number", "how many"]) and any(word in desc_lower for word in ["cities", "city"]):
+            query["measures"].append("cities.count")
         
-        if "customer" in desc_lower:
-            query["measures"].append("Sales.unique_customers")
+        # Cities dimensions
+        if "city" in desc_lower and "name" in desc_lower:
+            query["dimensions"].append("cities.city_name")
         
-        if "quantity" in desc_lower or "units" in desc_lower:
-            query["measures"].append("Sales.total_quantity")
+        if "state" in desc_lower and not any(word in desc_lower for word in ["customer", "sales"]):
+            query["dimensions"].append("cities.state_name")
         
-        if "average" in desc_lower and "transaction" in desc_lower:
-            query["measures"].append("Sales.average_transaction_value")
+        if "region" in desc_lower and not any(word in desc_lower for word in ["customer", "sales"]):
+            query["dimensions"].append("cities.region")
         
-        # Dimension breakdowns
-        if "region" in desc_lower:
-            query["dimensions"].append("Sales.region")
+        # Sales measures
+        if any(word in desc_lower for word in ["revenue", "sales", "income", "money"]):
+            query["measures"].append("sales.total_revenue")
         
-        if "state" in desc_lower:
-            query["dimensions"].append("Sales.state")
+        if any(word in desc_lower for word in ["order", "average order", "aov"]):
+            query["measures"].append("sales.average_order_value")
         
-        if "category" in desc_lower or "product" in desc_lower:
-            query["dimensions"].append("Sales.product_category")
+        if any(word in desc_lower for word in ["quantity", "volume", "units"]):
+            query["measures"].append("sales.total_quantity")
         
-        if "channel" in desc_lower:
-            query["dimensions"].append("Sales.channel")
+        if any(word in desc_lower for word in ["discount", "discounts"]):
+            query["measures"].append("sales.total_discount_amount")
         
-        if "brand" in desc_lower:
-            query["dimensions"].append("Sales.brand")
+        # Sales dimensions
+        if any(word in desc_lower for word in ["category", "product"]):
+            query["dimensions"].append("sales.product_category")
         
-        if "customer type" in desc_lower:
-            query["dimensions"].append("Sales.customer_type")
+        if any(word in desc_lower for word in ["channel", "channels"]):
+            query["dimensions"].append("sales.channel")
         
-        if "rep" in desc_lower or "salesperson" in desc_lower:
-            query["dimensions"].append("Sales.sales_rep_name")
+        if any(word in desc_lower for word in ["payment", "payment method"]):
+            query["dimensions"].append("sales.payment_method")
         
-        # Time dimensions
-        time_dim = None
-        if "monthly" in desc_lower or "by month" in desc_lower:
-            time_dim = {"dimension": "Sales.transaction_date", "granularity": "month"}
-        elif "daily" in desc_lower or "by day" in desc_lower:
-            time_dim = {"dimension": "Sales.transaction_date", "granularity": "day"}
-        elif "yearly" in desc_lower or "by year" in desc_lower:
-            time_dim = {"dimension": "Sales.transaction_date", "granularity": "year"}
-        elif "weekly" in desc_lower or "by week" in desc_lower:
-            time_dim = {"dimension": "Sales.transaction_date", "granularity": "week"}
+        if any(word in desc_lower for word in ["discount tier", "discount level"]):
+            query["dimensions"].append("sales.discount_tier")
         
-        if time_dim:
-            query["timeDimensions"] = [time_dim]
+        # Customer measures
+        if any(word in desc_lower for word in ["customer", "customers"]) and any(word in desc_lower for word in ["count", "number"]):
+            query["measures"].append("customers.count")
+        
+        if any(word in desc_lower for word in ["lifetime value", "ltv", "customer value"]):
+            query["measures"].append("customers.average_lifetime_value")
+        
+        if any(word in desc_lower for word in ["credit score", "credit"]):
+            query["measures"].append("customers.average_credit_score")
+        
+        # Customer dimensions
+        if any(word in desc_lower for word in ["customer type", "customer segment"]):
+            query["dimensions"].append("customers.customer_type")
+        
+        if any(word in desc_lower for word in ["credit score tier", "credit tier"]):
+            query["dimensions"].append("customers.credit_score_tier")
         
         # Ordering
-        if "top" in desc_lower or "highest" in desc_lower:
+        if "top" in desc_lower or "highest" in desc_lower or "largest" in desc_lower:
             if query["measures"]:
                 query["order"] = {query["measures"][0]: "desc"}
-        elif "bottom" in desc_lower or "lowest" in desc_lower:
+        elif "bottom" in desc_lower or "lowest" in desc_lower or "smallest" in desc_lower:
             if query["measures"]:
                 query["order"] = {query["measures"][0]: "asc"}
         
@@ -155,7 +163,7 @@ class NaturalLanguageProcessor:
         
         # Default measure if none specified
         if not query["measures"]:
-            query["measures"].append("Sales.total_revenue")
+            query["measures"].append("cities.count")
         
         # Clean up empty arrays
         query = {k: v for k, v in query.items() if v}
@@ -171,59 +179,59 @@ class AnalysisSuggester:
         """Return common business analysis patterns"""
         return [
             {
-                "title": "Sales Performance by Region",
-                "description": "Compare revenue and transaction volume across different regions",
+                "title": "Cities by Population",
+                "description": "Compare cities by total population",
                 "query": {
-                    "measures": ["Sales.total_revenue", "Sales.total_transactions"],
-                    "dimensions": ["Sales.region"],
-                    "order": {"Sales.total_revenue": "desc"}
-                }
-            },
-            {
-                "title": "Top Products by Revenue",
-                "description": "Identify best-performing product categories and brands",
-                "query": {
-                    "measures": ["Sales.total_revenue", "Sales.total_quantity"],
-                    "dimensions": ["Sales.product_category", "Sales.brand"],
-                    "order": {"Sales.total_revenue": "desc"},
+                    "measures": ["cities.total_population"],
+                    "dimensions": ["cities.city_name"],
+                    "order": {"cities.total_population": "desc"},
                     "limit": 10
                 }
             },
             {
-                "title": "Monthly Sales Trend",
-                "description": "Track revenue and transaction trends over time",
+                "title": "Population by Region",
+                "description": "Compare total population across different regions",
                 "query": {
-                    "measures": ["Sales.total_revenue", "Sales.average_transaction_value"],
-                    "timeDimensions": [{
-                        "dimension": "Sales.transaction_date",
-                        "granularity": "month"
-                    }]
+                    "measures": ["cities.total_population", "cities.count"],
+                    "dimensions": ["cities.region"],
+                    "order": {"cities.total_population": "desc"}
                 }
             },
             {
-                "title": "Customer Segmentation Analysis",
-                "description": "Analyze revenue by customer type and geographic distribution",
+                "title": "Population by State",
+                "description": "Analyze population distribution by state",
                 "query": {
-                    "measures": ["Sales.total_revenue", "Sales.unique_customers"],
-                    "dimensions": ["Sales.customer_type", "Sales.region"]
+                    "measures": ["cities.total_population", "cities.count"],
+                    "dimensions": ["cities.state_name"],
+                    "order": {"cities.total_population": "desc"}
                 }
             },
             {
-                "title": "Sales Rep Performance",
-                "description": "Compare sales representative performance and productivity",
+                "title": "Regional City Distribution",
+                "description": "Count of cities in each region",
                 "query": {
-                    "measures": ["Sales.total_revenue", "Sales.total_transactions"],
-                    "dimensions": ["Sales.sales_rep_name", "Sales.rep_performance_tier"],
-                    "order": {"Sales.total_revenue": "desc"}
+                    "measures": ["cities.count"],
+                    "dimensions": ["cities.region"],
+                    "order": {"cities.count": "desc"}
                 }
             },
             {
-                "title": "Channel Effectiveness",
-                "description": "Compare performance across different sales channels",
+                "title": "Top Cities by Population",
+                "description": "Identify the most populous cities",
                 "query": {
-                    "measures": ["Sales.total_revenue", "Sales.average_transaction_value"],
-                    "dimensions": ["Sales.channel"],
-                    "order": {"Sales.total_revenue": "desc"}
+                    "measures": ["cities.total_population"],
+                    "dimensions": ["cities.city_name", "cities.state_name"],
+                    "order": {"cities.total_population": "desc"},
+                    "limit": 5
+                }
+            },
+            {
+                "title": "State Population Rankings",
+                "description": "Rank states by total population across all cities",
+                "query": {
+                    "measures": ["cities.total_population"],
+                    "dimensions": ["cities.state_name"],
+                    "order": {"cities.total_population": "desc"}
                 }
             }
         ]
@@ -234,62 +242,69 @@ class AnalysisSuggester:
         question_lower = business_question.lower()
         suggestions = []
         
-        if any(word in question_lower for word in ["marketing", "campaign", "advertising"]):
+        if any(word in question_lower for word in ["population", "demographic", "people"]):
             suggestions.extend([
                 {
-                    "title": "Marketing Campaign ROI",
-                    "description": "Analyze return on advertising spend by campaign channel",
+                    "title": "Population Analysis by Region",
+                    "description": "Analyze population distribution across regions",
                     "query": {
-                        "measures": ["CampaignPerformance.total_revenue", "CampaignPerformance.return_on_ad_spend"],
-                        "dimensions": ["CampaignPerformance.campaign_channel"]
+                        "measures": ["cities.total_population"],
+                        "dimensions": ["cities.region"],
+                        "order": {"cities.total_population": "desc"}
                     }
                 },
                 {
-                    "title": "Campaign Performance Metrics",
-                    "description": "Track key performance indicators for marketing campaigns",
+                    "title": "Most Populous Cities",
+                    "description": "Identify cities with highest population",
                     "query": {
-                        "measures": ["CampaignPerformance.click_through_rate", "CampaignPerformance.conversion_rate"],
-                        "dimensions": ["CampaignPerformance.campaign_name"]
+                        "measures": ["cities.total_population"],
+                        "dimensions": ["cities.city_name", "cities.state_name"],
+                        "order": {"cities.total_population": "desc"},
+                        "limit": 10
                     }
                 }
             ])
         
-        if any(word in question_lower for word in ["customer", "retention", "loyalty"]):
+        if any(word in question_lower for word in ["geography", "location", "geographic", "regional"]):
             suggestions.extend([
                 {
-                    "title": "Customer Lifetime Value Analysis",
-                    "description": "Analyze customer value by type and credit score",
+                    "title": "Geographic Distribution",
+                    "description": "Analyze data distribution across geographic regions",
                     "query": {
-                        "measures": ["Customers.average_lifetime_value", "Customers.total_customers"],
-                        "dimensions": ["Customers.customer_type", "Customers.credit_score_tier"]
+                        "measures": ["cities.count", "cities.total_population"],
+                        "dimensions": ["cities.region", "cities.state_name"]
                     }
                 },
                 {
-                    "title": "Geographic Customer Distribution",
-                    "description": "Map customer distribution across regions",
+                    "title": "Regional Comparison",
+                    "description": "Compare metrics across different regions",
                     "query": {
-                        "measures": ["Customers.total_customers"],
-                        "dimensions": ["Customers.region", "Customers.customer_type"]
+                        "measures": ["cities.total_population"],
+                        "dimensions": ["cities.region"],
+                        "order": {"cities.total_population": "desc"}
                     }
                 }
             ])
         
-        if any(word in question_lower for word in ["product", "inventory", "catalog"]):
+        if any(word in question_lower for word in ["compare", "comparison", "ranking", "top"]):
             suggestions.extend([
                 {
-                    "title": "Product Profitability Analysis",
-                    "description": "Compare profit margins across product categories",
+                    "title": "Top Performers",
+                    "description": "Rank entities by key metrics",
                     "query": {
-                        "measures": ["Products.average_margin", "Products.total_products"],
-                        "dimensions": ["Products.category", "Products.price_tier"]
+                        "measures": ["cities.total_population"],
+                        "dimensions": ["cities.city_name"],
+                        "order": {"cities.total_population": "desc"},
+                        "limit": 10
                     }
                 },
                 {
-                    "title": "Product Portfolio Health",
-                    "description": "Analyze active vs discontinued products",
+                    "title": "State Rankings",
+                    "description": "Compare performance across states",
                     "query": {
-                        "measures": ["Products.total_products", "Products.average_unit_price"],
-                        "dimensions": ["Products.is_active", "Products.category"]
+                        "measures": ["cities.total_population", "cities.count"],
+                        "dimensions": ["cities.state_name"],
+                        "order": {"cities.total_population": "desc"}
                     }
                 }
             ])

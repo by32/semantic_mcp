@@ -1,0 +1,64 @@
+cubes:
+- name: sales
+  sql_table: sales
+
+  dimensions:
+  - name: id
+    sql: id
+    type: number
+    primary_key: true
+
+  - name: city_id
+    sql: city_id
+    type: number
+
+  - name: date
+    sql: date
+    type: time
+
+  - name: product_category
+    sql: product_category
+    type: string
+
+  - name: channel
+    sql: channel
+    type: string
+
+  - name: payment_method
+    sql: payment_method
+    type: string
+
+  - name: discount_tier
+    sql: |
+      CASE 
+        WHEN discount_percent = 0 THEN 'No Discount'
+        WHEN discount_percent <= 10 THEN 'Low Discount'
+        WHEN discount_percent <= 20 THEN 'High Discount'
+        ELSE 'Premium Discount'
+      END
+    type: string
+
+  measures:
+  - name: count
+    sql: id
+    type: count
+
+  - name: total_revenue
+    sql: total_amount
+    type: sum
+
+  - name: average_order_value
+    sql: total_amount
+    type: avg
+
+  - name: total_quantity
+    sql: quantity
+    type: sum
+
+  - name: average_quantity
+    sql: quantity
+    type: avg
+
+  - name: total_discount_amount
+    sql: unit_price * quantity * (discount_percent / 100)
+    type: sum

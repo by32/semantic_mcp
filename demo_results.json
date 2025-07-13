@@ -1,0 +1,149 @@
+{
+  "total_tests": 11,
+  "successful_tests": 10,
+  "success_rate": 90.9090909090909,
+  "total_execution_time": 0.2566258907318115,
+  "average_response_time_ms": 18.93899440765381,
+  "category_breakdown": {
+    "Geographic Analysis": {
+      "total": 2,
+      "success": 1
+    },
+    "Customer Analytics": {
+      "total": 2,
+      "success": 2
+    },
+    "Sales Analytics": {
+      "total": 3,
+      "success": 3
+    },
+    "Financial Analytics": {
+      "total": 1,
+      "success": 1
+    },
+    "Risk Analytics": {
+      "total": 1,
+      "success": 1
+    },
+    "Product Analytics": {
+      "total": 1,
+      "success": 1
+    },
+    "Executive Dashboard": {
+      "total": 1,
+      "success": 1
+    }
+  },
+  "results": [
+    {
+      "name": "basic_population_ranking",
+      "category": "Geographic Analysis",
+      "natural_language": "What are the top 5 most populous cities?",
+      "success": false,
+      "execution_time_ms": 67.02899932861328,
+      "insights": null,
+      "business_value": "Urban planning, market sizing, resource allocation",
+      "difficulty": "basic"
+    },
+    {
+      "name": "regional_distribution",
+      "category": "Geographic Analysis",
+      "natural_language": "How many cities are in each region?",
+      "success": true,
+      "execution_time_ms": 14.245033264160156,
+      "insights": "\ud83d\udcca Total cities analyzed: 10 | \ud83d\udcc8 Analyzed 4 segments/categories",
+      "business_value": "Market expansion strategy, regional coverage analysis",
+      "difficulty": "basic"
+    },
+    {
+      "name": "customer_segmentation",
+      "category": "Customer Analytics",
+      "natural_language": "Show customer distribution by type and credit score tier",
+      "success": true,
+      "execution_time_ms": 22.9949951171875,
+      "insights": "\ud83d\udc65 Total customers: 100 | \ud83d\udc8e Average customer lifetime value: $22,410.10 | \ud83d\udcc8 Analyzed 11 segments/categories",
+      "business_value": "Target marketing, risk assessment, customer strategy",
+      "difficulty": "intermediate"
+    },
+    {
+      "name": "high_value_customers",
+      "category": "Customer Analytics",
+      "natural_language": "Which customer types have the highest lifetime value?",
+      "success": true,
+      "execution_time_ms": 10.954856872558594,
+      "insights": "\ud83d\udc65 Total customers: 100 | \ud83d\udc8e Average customer lifetime value: $24,814.37 | \ud83d\udcc8 Analyzed 3 segments/categories",
+      "business_value": "Customer acquisition cost optimization, retention strategy",
+      "difficulty": "intermediate"
+    },
+    {
+      "name": "revenue_by_category",
+      "category": "Sales Analytics",
+      "natural_language": "What product categories generate the most revenue?",
+      "success": true,
+      "execution_time_ms": 16.666173934936523,
+      "insights": "\ud83d\udcb0 Total revenue: $1,346,750.89 | \ud83e\udd47 Top performer: Books with $309,401.90 | \ud83d\udcc8 Analyzed 5 segments/categories",
+      "business_value": "Inventory optimization, product strategy, pricing decisions",
+      "difficulty": "basic"
+    },
+    {
+      "name": "channel_effectiveness",
+      "category": "Sales Analytics",
+      "natural_language": "Compare average order value across different sales channels",
+      "success": true,
+      "execution_time_ms": 15.477895736694336,
+      "insights": "\ud83d\udcc8 Analyzed 4 segments/categories",
+      "business_value": "Channel investment decisions, sales strategy optimization",
+      "difficulty": "intermediate"
+    },
+    {
+      "name": "discount_impact",
+      "category": "Sales Analytics",
+      "natural_language": "How do discount tiers affect total sales volume?",
+      "success": true,
+      "execution_time_ms": 40.96484184265137,
+      "insights": "\ud83d\udcb0 Total revenue: $1,346,750.89 | \ud83d\udcc8 Analyzed 3 segments/categories",
+      "business_value": "Pricing strategy, promotion effectiveness, margin optimization",
+      "difficulty": "advanced"
+    },
+    {
+      "name": "payment_preferences",
+      "category": "Financial Analytics",
+      "natural_language": "What payment methods are most popular and generate highest revenue?",
+      "success": true,
+      "execution_time_ms": 30.115127563476562,
+      "insights": "\ud83d\udcc8 Analyzed 4 segments/categories",
+      "business_value": "Payment processing optimization, customer experience improvement",
+      "difficulty": "intermediate"
+    },
+    {
+      "name": "customer_credit_performance",
+      "category": "Risk Analytics",
+      "natural_language": "Show average customer lifetime value by credit score tier",
+      "success": true,
+      "execution_time_ms": 13.420820236206055,
+      "insights": "\ud83d\udcc8 Analyzed 4 segments/categories",
+      "business_value": "Credit policy optimization, risk-based pricing, customer acquisition",
+      "difficulty": "advanced"
+    },
+    {
+      "name": "product_category_trends",
+      "category": "Product Analytics",
+      "natural_language": "Which product categories have the highest quantity sold?",
+      "success": true,
+      "execution_time_ms": 12.563228607177734,
+      "insights": "\ud83d\udcc8 Analyzed 5 segments/categories",
+      "business_value": "Inventory planning, supply chain optimization, demand forecasting",
+      "difficulty": "basic"
+    },
+    {
+      "name": "comprehensive_sales_overview",
+      "category": "Executive Dashboard",
+      "natural_language": "Give me a complete sales overview with revenue, orders, and average values",
+      "success": true,
+      "execution_time_ms": 11.986970901489258,
+      "insights": "\u2705 Successfully retrieved 1 data points",
+      "business_value": "Strategic decision making, board reporting, performance monitoring",
+      "difficulty": "basic"
+    }
+  ]
+}

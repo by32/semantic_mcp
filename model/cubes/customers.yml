@@ -1,0 +1,52 @@
+cubes:
+- name: customers
+  sql_table: customers
+
+  dimensions:
+  - name: id
+    sql: id
+    type: number
+    primary_key: true
+
+  - name: customer_name
+    sql: customer_name
+    type: string
+
+  - name: customer_type
+    sql: customer_type
+    type: string
+
+  - name: city_id
+    sql: city_id
+    type: number
+
+  - name: registration_date
+    sql: registration_date
+    type: time
+
+  - name: credit_score_tier
+    sql: |
+      CASE 
+        WHEN credit_score >= 750 THEN 'Excellent'
+        WHEN credit_score >= 700 THEN 'Good'
+        WHEN credit_score >= 650 THEN 'Fair'
+        ELSE 'Poor'
+      END
+    type: string
+
+  measures:
+  - name: count
+    sql: id
+    type: count
+
+  - name: total_lifetime_value
+    sql: lifetime_value
+    type: sum
+
+  - name: average_lifetime_value
+    sql: lifetime_value
+    type: avg
+
+  - name: average_credit_score
+    sql: credit_score
+    type: avg
