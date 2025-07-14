@@ -36,6 +36,10 @@ class CubeAPIClient:
         try:
             with urllib.request.urlopen(req, timeout=30) as response:
                 return json.loads(response.read().decode('utf-8'))
+        except urllib.error.HTTPError as e:
+            # Read the error response body for more details
+            error_body = e.read().decode('utf-8') if e.fp else "No error details"
+            raise Exception(f"Cube.js HTTP Error {e.code}: {e.reason}. Response: {error_body}")
         except urllib.error.URLError as e:
             raise Exception(f"Failed to connect to Cube.js: {e}")
     
@@ -52,6 +56,10 @@ class CubeAPIClient:
         try:
             with urllib.request.urlopen(req, timeout=30) as response:
                 return json.loads(response.read().decode('utf-8'))
+        except urllib.error.HTTPError as e:
+            # Read the error response body for more details
+            error_body = e.read().decode('utf-8') if e.fp else "No error details"
+            raise Exception(f"Cube.js metadata HTTP Error {e.code}: {e.reason}. Response: {error_body}")
         except urllib.error.URLError as e:
             raise Exception(f"Failed to get metadata from Cube.js: {e}")
 
@@ -61,7 +69,15 @@ class NaturalLanguageProcessor:
     @staticmethod
     def convert_to_query(description: str) -> Dict[str, Any]:
         """Convert natural language description to Cube.js query"""
-        desc_lower = description.lower()
+        if not description or not description.strip():
+            # Handle empty descriptions
+            return {
+                "measures": ["cities.count"],
+                "dimensions": ["cities.city_name"],
+                "limit": 5
+            }
+            
+        desc_lower = description.lower().strip()
         query = {
             "measures": [],
             "dimensions": [],
@@ -144,13 +160,38 @@ class NaturalLanguageProcessor:
         elif "top 3" in desc_lower or "top three" in desc_lower:
             query["limit"] = 3
         
-        # Default behavior for common patterns
-        if not query["measures"] and not query["dimensions"]:
-            # If no specific request, default to city count
-            query["measures"].append("cities.count")
-        
-        # Clean up empty arrays
+        # Clean up empty arrays first
         query = {k: v for k, v in query.items() if v}
+        
+        # CRITICAL: Ensure we always have at least measures or dimensions
+        # Cube.js requires at least one of: measures, dimensions, or timeDimensions
+        if not query.get("measures") and not query.get("dimensions"):
+            # Default to a safe query based on description content
+            if any(word in desc_lower for word in ["sales", "revenue", "product", "category"]):
+                query = {
+                    "measures": ["sales.total_revenue"],
+                    "dimensions": ["sales.product_category"],
+                    "order": {"sales.total_revenue": "desc"},
+                    "limit": 5
+                }
+            elif any(word in desc_lower for word in ["customer", "customers", "client"]):
+                query = {
+                    "measures": ["customers.count"],
+                    "dimensions": ["customers.customer_type"],
+                    "limit": 5
+                }
+            else:
+                # Default to cities
+                query = {
+                    "measures": ["cities.count"],
+                    "dimensions": ["cities.city_name"],
+                    "limit": 5
+                }
+        
+        # Double-check that we have valid content
+        if not query.get("measures") and not query.get("dimensions"):
+            # Fallback safety net
+            query["measures"] = ["cities.count"]
         
         return query
 
@@ -292,6 +333,11 @@ class LangFlowMCPServer:
                     # Natural language query
                     description = arguments["description"]
                     query = NaturalLanguageProcessor.convert_to_query(description)
+                    
+                    # Debug: Log the generated query
+                    import sys
+                    print(f"DEBUG: Generated query for '{description}': {query}", file=sys.stderr)
+                    
                     result = self.cube_client.query(query)
                     
                     response_data = {
@@ -416,12 +462,21 @@ class LangFlowMCPServer:
                 return json.dumps(response)
                 
         except Exception as e:
+            # Enhanced error logging for debugging
+            import traceback
+            error_details = {
+                "error": str(e),
+                "traceback": traceback.format_exc(),
+                "request": request if 'request' in locals() else None
+            }
+            
             response = {
                 "jsonrpc": "2.0",
                 "id": request.get("id") if 'request' in locals() else None,
                 "error": {
                     "code": -32603,
-                    "message": f"Tool execution error: {str(e)}"
+                    "message": f"Tool execution error: {str(e)}",
+                    "data": error_details
                 }
             }
             return json.dumps(response)
