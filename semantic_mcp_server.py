@@ -16,9 +16,6 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import (
     Tool,
-    TextContent,
-    CallToolResult,
-    ListToolsResult,
 )
 from pydantic import BaseModel, Field
 
@@ -320,63 +317,61 @@ cube_client = CubeAPIClient()
 
 
 @server.list_tools()
-async def list_tools() -> ListToolsResult:
+async def list_tools() -> list[Tool]:
     """List available tools for the semantic layer"""
-    return ListToolsResult(
-        tools=[
-            Tool(
-                name="query_semantic_layer",
-                description="Execute queries against the semantic layer using structured queries or natural language",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "object",
-                            "description": "Structured Cube.dev query with measures, dimensions, filters, etc."
-                        },
-                        "description": {
-                            "type": "string",
-                            "description": "Natural language description of what you want to analyze"
-                        }
+    return [
+        Tool(
+            name="query_semantic_layer",
+            description="Execute queries against the semantic layer using structured queries or natural language",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "object",
+                        "description": "Structured Cube.dev query with measures, dimensions, filters, etc."
                     },
-                    "anyOf": [
-                        {"required": ["query"]},
-                        {"required": ["description"]}
-                    ]
-                }
-            ),
-            Tool(
-                name="get_schema_metadata",
-                description="Get available cubes, dimensions, and measures from the semantic layer",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "cube_name": {
-                            "type": "string",
-                            "description": "Optional: Get metadata for a specific cube"
-                        }
+                    "description": {
+                        "type": "string",
+                        "description": "Natural language description of what you want to analyze"
+                    }
+                },
+                "anyOf": [
+                    {"required": ["query"]},
+                    {"required": ["description"]}
+                ]
+            }
+        ),
+        Tool(
+            name="get_schema_metadata",
+            description="Get available cubes, dimensions, and measures from the semantic layer",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "cube_name": {
+                        "type": "string",
+                        "description": "Optional: Get metadata for a specific cube"
                     }
                 }
-            ),
-            Tool(
-                name="suggest_analysis",
-                description="Get suggestions for analysis based on available data and business questions",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "business_question": {
-                            "type": "string",
-                            "description": "Business question or area of interest"
-                        }
+            }
+        ),
+        Tool(
+            name="suggest_analysis",
+            description="Get suggestions for analysis based on available data and business questions",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "business_question": {
+                        "type": "string",
+                        "description": "Business question or area of interest"
                     }
                 }
-            )
-        ]
-    )
+            }
+        )
+    ]
 
 
 @server.call_tool()
-async def call_tool(name: str, arguments: Dict[str, Any]) -> CallToolResult:
+async def call_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
     """Handle tool calls"""
     try:
         if name == "query_semantic_layer":
@@ -385,14 +380,12 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> CallToolResult:
                 query = arguments["query"]
                 result = await cube_client.query(query)
                 
-                return CallToolResult(
-                    content=[
-                        TextContent(
-                            type="text",
-                            text=json.dumps(result, indent=2)
-                        )
-                    ]
-                )
+                return {
+                    "content": [{
+                        "type": "text", 
+                        "text": json.dumps(result, indent=2)
+                    }]
+                }
             
             elif "description" in arguments:
                 # Natural language query
@@ -406,14 +399,12 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> CallToolResult:
                     "result": result
                 }
                 
-                return CallToolResult(
-                    content=[
-                        TextContent(
-                            type="text",
-                            text=json.dumps(response, indent=2)
-                        )
-                    ]
-                )
+                return {
+                    "content": [{
+                        "type": "text",
+                        "text": json.dumps(response, indent=2)
+                    }]
+                }
             
             else:
                 raise ValueError("Either 'query' or 'description' must be provided")
@@ -429,24 +420,20 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> CallToolResult:
                 if not cube:
                     raise ValueError(f"Cube '{cube_name}' not found")
                 
-                return CallToolResult(
-                    content=[
-                        TextContent(
-                            type="text",
-                            text=json.dumps(cube, indent=2)
-                        )
-                    ]
-                )
+                return {
+                    "content": [{
+                        "type": "text",
+                        "text": json.dumps(cube, indent=2)
+                    }]
+                }
             
             # Return full metadata
-            return CallToolResult(
-                content=[
-                    TextContent(
-                        type="text",
-                        text=json.dumps(meta, indent=2)
-                    )
-                ]
-            )
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": json.dumps(meta, indent=2)
+                }]
+            }
         
         elif name == "suggest_analysis":
             meta = await cube_client.get_meta()
@@ -469,28 +456,24 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> CallToolResult:
                     business_question, meta
                 )
             
-            return CallToolResult(
-                content=[
-                    TextContent(
-                        type="text",
-                        text=json.dumps(suggestions, indent=2)
-                    )
-                ]
-            )
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": json.dumps(suggestions, indent=2)
+                }]
+            }
         
         else:
             raise ValueError(f"Unknown tool: {name}")
     
     except Exception as e:
-        return CallToolResult(
-            content=[
-                TextContent(
-                    type="text",
-                    text=f"Error: {str(e)}"
-                )
-            ],
-            isError=True
-        )
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"Error: {str(e)}"
+            }],
+            "isError": True
+        }
 
 
 async def main():

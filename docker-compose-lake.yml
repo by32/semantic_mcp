@@ -81,11 +81,9 @@ services:
       retries: 3
       start_period: 40s
 
-  # Python MCP Server
+  # Python MCP Server (stdio mode)
   mcp-server:
     build: .
-    ports:
-      - "8000:8000"
     environment:
       - CUBE_API_URL=http://cube:4000
       - CUBE_API_SECRET=your-secret-key-here
@@ -98,6 +96,8 @@ services:
         condition: service_healthy
     volumes:
       - ./lake_data:/lake_data
+    # Keep container running for stdio access
+    command: tail -f /dev/null
 
 volumes:
   minio_data:

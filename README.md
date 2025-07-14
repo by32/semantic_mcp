@@ -257,6 +257,47 @@ This MCP server enables agentic AI platforms to provide **conversational busines
 - **Governed Data Access**: Consistent business logic and calculations across all queries
 - **High Performance**: Sub-15ms response times for real-time conversational analytics
 
+### LangFlow Desktop Integration
+
+The included LangFlow-compatible MCP server (`langflow_mcp_server.py`) works seamlessly with LangFlow Desktop for conversational business intelligence:
+
+#### Quick Setup:
+1. **Start the DuckLake stack**: `docker-compose -f docker-compose-lake.yml up -d`
+2. **Configure LangFlow MCP Tools component**:
+   - **Mode**: STDIO
+   - **Command**: `/usr/bin/python3 /path/to/semantic_mcp/langflow_mcp_server.py`
+   - **Name**: semantic_mcp
+
+#### LangFlow Process Flow:
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐    ┌──────────────────┐
+│   Chat Input    │───▶│   Chat Model     │───▶│   MCP Tools     │───▶│   Chat Output   │
+│                 │    │   (OpenAI/etc)   │    │ semantic_mcp    │    │                 │
+│ User Question   │    │                  │    │                 │    │ Business Answer │
+└─────────────────┘    └──────────────────┘    └─────────────────┘    └──────────────────┘
+```
+
+#### Example Queries in LangFlow:
+- **"Show me revenue by product category"** → Real sales data analysis
+- **"What are the top 5 cities by population?"** → Geographic insights
+- **"How many customers do we have by type?"** → Customer segmentation
+- **"What data is available?"** → Schema discovery
+
+#### Chat Model System Prompt:
+```
+You are a business intelligence assistant with access to semantic data tools that can query business metrics about cities, sales, and customers.
+
+When users ask business questions:
+1. Use the query_semantic_layer tool for data queries
+2. Use get_schema_metadata tool to understand available data
+3. Provide clear, business-focused explanations of the results
+
+Available data includes:
+- Cities: population, names, states, regions
+- Sales: revenue, categories, channels, payment methods
+- Customers: counts, lifetime value, segments, credit scores
+```
+
 ### Example Integration:
 ```python
 # User: "Which customer types have the highest lifetime value?"
