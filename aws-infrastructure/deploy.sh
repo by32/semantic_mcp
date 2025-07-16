@@ -39,8 +39,22 @@ echo "📦 Uploading data to S3..."
 ./upload-data.sh
 
 echo "✅ Deployment successful!"
+
+# Setup the bridge automatically
+echo "🌉 Setting up LangFlow bridge..."
+cd ..
+./setup-aws-bridge.sh
+
+echo ""
+echo "🎉 Complete setup finished!"
+echo ""
+echo "📋 LangFlow Configuration:"
+echo "   Mode: STDIO"
+echo "   Command: /usr/bin/python3 $(pwd)/aws-mcp-bridge-configured.py"
+echo "   Name: aws-semantic-mcp"
 echo ""
 echo "Next steps:"
-echo "1. Test the API Gateway endpoint"
-echo "2. Update LangFlow to use the new API"
-echo "3. Monitor CloudWatch logs for any issues"
+echo "1. Update LangFlow Desktop with the new command above"
+echo "2. Test your queries - they now run on AWS!"
+echo "3. Monitor costs in AWS Cost Explorer"
+echo "4. Check CloudWatch logs for any issues"
