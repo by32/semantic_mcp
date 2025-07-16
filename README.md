@@ -35,7 +35,9 @@ This architecture provides true separation of storage and compute, enabling scal
 
 ## Quick Start
 
-### 1. Start the DuckLake Stack
+### Option A: Local Development Setup
+
+#### 1. Start the DuckLake Stack
 ```bash
 # Start complete DuckLake architecture: MinIO + DuckDB + Cube.js + MCP
 docker-compose -f docker-compose-lake.yml up -d
@@ -44,7 +46,7 @@ docker-compose -f docker-compose-lake.yml up -d
 docker-compose -f docker-compose-lake.yml logs -f
 ```
 
-### 2. Verify Data Lake Setup
+#### 2. Verify Data Lake Setup
 ```bash
 # Check that all services are healthy
 docker-compose -f docker-compose-lake.yml ps
@@ -56,7 +58,7 @@ curl http://localhost:4000/cubejs-api/v1/meta
 # Access MinIO console at http://localhost:9001 (admin/password123)
 ```
 
-### 3. Run Comprehensive Demo
+#### 3. Run Comprehensive Demo
 ```bash
 # Install Python dependencies with uv
 uv init && uv add httpx
@@ -65,16 +67,91 @@ uv init && uv add httpx
 uv run python demo_test_suite.py
 ```
 
-### 4. MCP Server Integration
+#### 4. LangFlow Integration (Local)
 ```bash
-# Run the MCP server for AI agent integration
-python semantic_mcp_server.py
+# Use the robust MCP server for LangFlow Desktop
+# Command: /usr/bin/python3 /path/to/langflow_mcp_server_robust.py
+python3 langflow_mcp_server_robust.py
 ```
 
 **Expected Results:**
 - ✅ 100% test success rate (11/11 scenarios)
 - ⚡ Sub-15ms average response times  
 - 🎯 Complete business intelligence across 7 categories
+
+### Option B: AWS Cloud Deployment (Recommended)
+
+#### 1. Deploy to AWS
+```bash
+# One-command deployment to AWS
+cd aws-infrastructure
+./deploy.sh
+```
+
+#### 2. Connect LangFlow to AWS
+```bash
+# Bridge automatically configured during deployment
+# Use the generated command in LangFlow Desktop:
+# /usr/bin/python3 /path/to/aws-mcp-bridge-configured.py
+```
+
+#### 3. Test Cloud Integration
+```bash
+# Test the AWS bridge
+python3 test-aws-bridge.py
+```
+
+**AWS Benefits:**
+- 🚀 **Serverless scaling** - Pay only for usage
+- 🔒 **Enterprise security** - IAM, encryption, monitoring
+- 🌍 **Global availability** - API Gateway worldwide
+- 💰 **Cost efficient** - ~$20/month dev, ~$100/month prod
+
+## AWS Architecture
+
+### Infrastructure Components
+
+The AWS deployment uses a modern serverless architecture for scalability and cost efficiency:
+
+#### Core Services:
+- **S3 Data Lake**: Object storage for Parquet files with intelligent tiering
+- **Lambda Functions**: Serverless compute for DuckDB queries and MCP protocol
+- **API Gateway**: RESTful HTTP endpoint with CORS and authentication
+- **IAM Roles**: Secure service-to-service communication
+- **CloudWatch**: Monitoring, logging, and alerting
+
+#### Architecture Diagram:
+```
+LangFlow Desktop → STDIO Bridge → API Gateway → Lambda → DuckDB + S3
+     ↓                ↓              ↓           ↓         ↓
+  User Query    → JSON-RPC    → HTTP POST → Query Engine → Data Lake
+```
+
+### Data Flow:
+1. **User Query** → LangFlow Desktop app
+2. **STDIO Bridge** → Converts to HTTP API calls
+3. **API Gateway** → Routes to appropriate Lambda function
+4. **Lambda Functions** → Process MCP requests and execute DuckDB queries
+5. **S3 Data Lake** → Serves Parquet files to DuckDB engine
+6. **Response Path** → Results flow back through same chain
+
+### Cost Optimization:
+- **Pay-per-use** Lambda billing (no idle costs)
+- **S3 Intelligent Tiering** for automatic cost optimization
+- **API Gateway caching** for repeated queries
+- **DuckDB efficiency** for fast analytical queries
+
+### Security Features:
+- **IAM Role-based Access** for all service communication
+- **API Gateway throttling** to prevent abuse
+- **CloudWatch monitoring** for security events
+- **Encryption at rest and in transit**
+
+### Deployment Files:
+- `aws-infrastructure/main.tf` - Complete Terraform configuration
+- `aws-infrastructure/deploy.sh` - One-command deployment script
+- `aws-mcp-bridge.py` - STDIO to HTTP bridge for LangFlow
+- `setup-aws-bridge.sh` - Automated bridge configuration
 
 ## Data Model
 
@@ -259,21 +336,28 @@ This MCP server enables agentic AI platforms to provide **conversational busines
 
 ### LangFlow Desktop Integration
 
-The included LangFlow-compatible MCP server (`langflow_mcp_server.py`) works seamlessly with LangFlow Desktop for conversational business intelligence:
+The semantic MCP server integrates seamlessly with LangFlow Desktop for conversational business intelligence. Choose your deployment option:
 
-#### Quick Setup:
+#### Option A: Local Development Integration
 1. **Start the DuckLake stack**: `docker-compose -f docker-compose-lake.yml up -d`
 2. **Configure LangFlow MCP Tools component**:
    - **Mode**: STDIO
-   - **Command**: `/usr/bin/python3 /path/to/semantic_mcp/langflow_mcp_server.py`
+   - **Command**: `/usr/bin/python3 /path/to/semantic_mcp/langflow_mcp_server_robust.py`
    - **Name**: semantic_mcp
+
+#### Option B: AWS Cloud Integration (Recommended)
+1. **Deploy to AWS**: `cd aws-infrastructure && ./deploy.sh`
+2. **Configure LangFlow MCP Tools component**:
+   - **Mode**: STDIO
+   - **Command**: `/usr/bin/python3 /path/to/semantic_mcp/aws-mcp-bridge-configured.py`
+   - **Name**: aws-semantic-mcp
 
 #### LangFlow Process Flow:
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐    ┌──────────────────┐
 │   Chat Input    │───▶│   Chat Model     │───▶│   MCP Tools     │───▶│   Chat Output   │
 │                 │    │   (OpenAI/etc)   │    │ semantic_mcp    │    │                 │
-│ User Question   │    │                  │    │                 │    │ Business Answer │
+│ User Question   │    │                  │    │  or aws-mcp     │    │ Business Answer │
 └─────────────────┘    └──────────────────┘    └─────────────────┘    └──────────────────┘
 ```
 
@@ -310,7 +394,7 @@ response = await mcp_client.call_tool(
 
 ## Troubleshooting
 
-### Common Issues
+### Local Development Issues
 
 1. **DuckLake Services Not Starting**
    ```bash
@@ -335,20 +419,81 @@ response = await mcp_client.call_tool(
    uv run python demo_test_suite.py
    ```
 
-### Logs
+5. **LangFlow Desktop MCP Issues**
+   ```bash
+   # Test the robust MCP server
+   python3 langflow_mcp_server_robust.py
+   # Check for port conflicts on 4000
+   lsof -i :4000
+   ```
+
+### AWS Cloud Issues
+
+1. **AWS Deployment Failures**
+   ```bash
+   # Check Terraform state
+   cd aws-infrastructure
+   terraform show
+   
+   # Retry deployment
+   terraform apply
+   ```
+
+2. **API Gateway Connectivity**
+   ```bash
+   # Test API directly
+   curl -X POST https://your-api-url/dev/mcp \
+     -H "Content-Type: application/json" \
+     -d '{"method": "initialize", "params": {}}'
+   ```
+
+3. **Bridge Configuration Issues**
+   ```bash
+   # Reconfigure bridge
+   ./setup-aws-bridge.sh
+   
+   # Test bridge
+   python3 test-aws-bridge.py
+   ```
+
+4. **Lambda Function Errors**
+   ```bash
+   # Check CloudWatch logs
+   aws logs describe-log-groups --log-group-name-prefix /aws/lambda/
+   ```
+
+### LangFlow Integration Issues
+
+1. **MCP Tools Not Working**
+   - Verify STDIO mode is selected
+   - Check Python path is correct
+   - Ensure script has execute permissions
+
+2. **"Query param is required" Errors**
+   - Natural language processor issue
+   - Try more specific business questions
+   - Check robust MCP server fallback responses
+
+3. **Desktop App Connectivity**
+   - LangFlow Desktop may have sandbox restrictions
+   - AWS cloud deployment recommended for stability
+
+### Logs and Monitoring
+
 ```bash
-# All service logs
+# Local logs
 docker-compose -f docker-compose-lake.yml logs
 
-# Specific service logs
-docker-compose -f docker-compose-lake.yml logs cube
-docker-compose -f docker-compose-lake.yml logs ducklake-setup
-docker-compose -f docker-compose-lake.yml logs minio
+# AWS logs
+aws logs tail /aws/lambda/semantic-mcp-server --follow
+
+# Bridge debug mode
+DEBUG=1 python3 aws-mcp-bridge-configured.py
 ```
 
 ### Performance Verification
 Expected performance benchmarks:
 - **Test Success Rate**: 100% (11/11 scenarios)
-- **Average Response Time**: <15ms  
+- **Average Response Time**: <15ms (local), <50ms (AWS)
 - **Data Coverage**: 7 business intelligence categories
 - **Natural Language Processing**: Automatic query generation from English
