@@ -146,6 +146,15 @@ python3 test-aws-bridge.py
 #### Talk Track:
 > "Now here's where it gets interesting for business users. Raw SQL queries are fine for data engineers, but business people think in terms of metrics, KPIs, and business concepts. That's where our semantic layer comes in."
 
+> "Before I show you the semantic layer, let me demonstrate why this matters. This is the difference between AI that sometimes gets the right answer, and AI that consistently delivers business-validated insights."
+
+**💡 OPTIONAL: Semantic Layer Value Demo (Add 10 minutes)**
+*If you want to emphasize the value proposition, run the semantic layer comparison:*
+```bash
+python3 semantic_layer_comparison.py
+```
+*This demonstrates the critical problems with text-to-SQL approaches and why semantic layers are essential. See SEMANTIC-LAYER-VALUE-DEMO.md for the complete script.*
+
 #### Demo Actions:
 
 1. **Open Cube.dev Playground** (http://localhost:4000)
@@ -426,6 +435,12 @@ python3 test-aws-bridge.py
 - Full 5-tier walkthrough
 - Show code and configuration
 - Demonstrate deployment options
+
+### **35-Minute Value-Focused Demo**
+- Include the semantic layer value demonstration
+- Use SEMANTIC-LAYER-VALUE-DEMO.md for detailed script
+- Run semantic_layer_comparison.py for live comparison
+- Perfect for audiences evaluating text-to-SQL vs semantic approaches
 
 ### **45-Minute Workshop**
 - Include hands-on exercises
